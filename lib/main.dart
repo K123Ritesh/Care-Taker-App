@@ -1,20 +1,67 @@
-import 'package:care_taker/main_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Screenshot Example',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        primarySwatch: Colors.blue,
       ),
-      home: const MainPage(),
+      home: MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  Uint8List? _screenshotBytes;
+
+  Future<void> _takeScreenshot() async {
+    try {
+      final Uint8List? bytes = await const MethodChannel('screenshot_channel')
+          .invokeMethod('takeScreenShot');
+      setState(() {
+        _screenshotBytes = bytes;
+      });
+    } on PlatformException catch (e) {
+      print("Failed to take screenshot: '${e.message}'.");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Screenshot Example'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            ElevatedButton(
+              onPressed: _takeScreenshot,
+              child: const Text('Take Screenshot'),
+            ),
+            const SizedBox(height: 20),
+            if (_screenshotBytes != null)
+              Image.memory(
+                _screenshotBytes!,
+                width: 200,
+                height: 200,
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
